@@ -1,6 +1,20 @@
 name: "tauri-build-action"
 description: "does cool stuff :3"
 
+# TODO: add better descriptions
+inputs:
+  arch:
+    description: "the arch"
+
+  tag:
+    description: "the release tag"
+
+  release-name:
+    description: "the release name"
+
+  release-body:
+    description: "the release body"
+
 runs:
   using: "node20"
   main: "dist/index.js"

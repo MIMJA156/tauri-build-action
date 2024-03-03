@@ -4,8 +4,47 @@ on:
   workflow_dispatch:
 
 jobs:
-  hello:
-    runs-on: ubuntu-latest
+  release-tauri:
+    permissions:
+      contents: write
+
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          [
+            { os: macos-latest, arch: silicon },
+            { os: macos-latest, arch: intel },
+            { os: ubuntu-20.04, arch: none },
+            { os: windows-latest, arch: none },
+          ]
+
+    runs-on: ${{ matrix.platform.os }}
     steps:
       - uses: actions/checkout@v4
+
+      - name: install node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: install rust stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: install dependencies (ubuntu only)
+        if: matrix.platform == 'ubuntu-20.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev libappindicator3-dev librsvg2-dev patchelf
+
+      - name: install frontend dependencies
+        run: npm install
+
       - uses: "./"
+        env:
+          GITHUB_TOKEN: token-token-token
+        with:
+          arch: ${{ matrix.platform.arch }}
+          release-tag: App-$VERSION
+          release-name: App $VERSION
+          release-body: This release was auto generated using github actions!
