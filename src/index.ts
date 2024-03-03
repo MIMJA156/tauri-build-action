@@ -32,6 +32,8 @@ async function run(): Promise<void> {
         const release_name = getInput("release-name");
         const release_body = getInput("release-body");
 
+        console.log(release_body);
+
         const local = new LocalProject(release_tag, release_name, release_body, tauri);
 
         if (architecture !== "none") {
