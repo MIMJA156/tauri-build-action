@@ -41,10 +41,16 @@ async function run(): Promise<void> {
             current_args.push("--target");
             current_args.push(arch_map[architecture]);
 
-            await execa(base_command, current_args);
+            await execa(base_command, current_args, {
+                stdio: 'inherit',
+                env: { FORCE_COLOR: '0' },
+            }).then();
         } else {
             const current_args = [...base_args];
-            await execa(base_command, current_args);
+            await execa(base_command, current_args, {
+                stdio: 'inherit',
+                env: { FORCE_COLOR: '0' },
+            }).then();
         }
 
         let release = await get_release(local.release_tag);
