@@ -30,7 +30,7 @@ async function run(): Promise<void> {
         const architecture = getInput("arch").toLowerCase() as "intel" | "silicon" | "none"
         const release_tag = getInput("release-tag");
         const release_name = getInput("release-name");
-        const release_body = getInput("release_body");
+        const release_body = getInput("release-body");
 
         const local = new LocalProject(release_tag, release_name, release_body, tauri);
 
