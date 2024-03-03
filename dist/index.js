@@ -1,6 +1,19 @@
 /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
+/***/ 9582:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.get_release = void 0;
+function get_release() { }
+exports.get_release = get_release;
+
+
+/***/ }),
+
 /***/ 7351:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -29600,6 +29613,8 @@ var exports = __webpack_exports__;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core_1 = __nccwpck_require__(2186);
 const execa_1 = __nccwpck_require__(4460);
+const get_1 = __nccwpck_require__(9582);
+const path_1 = __nccwpck_require__(1017);
 const arch_map = {
     "silicon": "aarch64-apple-darwin",
     "intel": "x86_64-apple-darwin",
@@ -29612,7 +29627,12 @@ async function run() {
         if (process.env.GITHUB_TOKEN === undefined) {
             throw new Error('GITHUB_TOKEN is required');
         }
+        const project_path = (0, path_1.resolve)(process.cwd(), (0, core_1.getInput)('projectPath') || "./");
+        console.log(`\n\n\n\n\n\n\n\n\n\n ${(0, path_1.resolve)(project_path, "src-tauri/tauri.config.json")} \n\n\n\n\n\n\n\n\n\n`);
         const architecture = (0, core_1.getInput)("arch").toLowerCase();
+        const release_tag = (0, core_1.getInput)("release-tag");
+        const release_name = (0, core_1.getInput)("release-name");
+        const release_body = (0, core_1.getInput)("release_body");
         if (architecture !== "none") {
             const current_args = [...base_args];
             current_args.push("--");
@@ -29624,6 +29644,7 @@ async function run() {
             const current_args = [...base_args];
             await (0, execa_1.execa)(base_command, current_args);
         }
+        const release = (0, get_1.get_release)();
     }
     catch (error) {
         let err = error;

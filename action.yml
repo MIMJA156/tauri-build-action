@@ -6,7 +6,7 @@ inputs:
   arch:
     description: "the arch"
 
-  tag:
+  release-tag:
     description: "the release tag"
 
   release-name:
