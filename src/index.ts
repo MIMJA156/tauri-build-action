@@ -6,6 +6,7 @@ import { LocalProject, TauriProject } from './data'
 import { create_release } from './create'
 import { readFileSync } from 'fs';
 import { resolve } from 'path'
+import { printDirectoryTree } from "./misc"
 
 const arch_map = {
     "silicon": "aarch64-apple-darwin",
@@ -21,7 +22,8 @@ async function run(): Promise<void> {
         if (process.env.GITHUB_TOKEN === undefined) throw new Error('GITHUB_TOKEN env var is required');
 
         const project_path = resolve(process.cwd(), getInput('projectPath') || "./");
-        const config_path = resolve(project_path, "src-tauri/tauri.config.json");
+
+        const config_path = project_path + "/src-tauri/tauri.conf.json";
         const json_file = JSON.parse(readFileSync(config_path).toString("utf-8"));
         const tauri = new TauriProject(json_file);
 

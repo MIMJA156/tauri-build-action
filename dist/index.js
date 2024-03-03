@@ -33967,7 +33967,7 @@ async function run() {
         if (process.env.GITHUB_TOKEN === undefined)
             throw new Error('GITHUB_TOKEN env var is required');
         const project_path = (0, path_1.resolve)(process.cwd(), (0, core_1.getInput)('projectPath') || "./");
-        const config_path = (0, path_1.resolve)(project_path, "src-tauri/tauri.config.json");
+        const config_path = project_path + "/src-tauri/tauri.conf.json";
         const json_file = JSON.parse((0, fs_1.readFileSync)(config_path).toString("utf-8"));
         const tauri = new data_1.TauriProject(json_file);
         const architecture = (0, core_1.getInput)("arch").toLowerCase();
