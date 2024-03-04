@@ -1,4 +1,4 @@
-import { getInput, setFailed } from "@actions/core"
+import { getInput, setFailed, setOutput, info } from "@actions/core"
 import { get_release } from './get'
 import { execa } from "execa"
 
@@ -6,7 +6,7 @@ import { LocalProject, TauriProject } from './data'
 import { create_release } from './create'
 import { readFileSync } from 'fs';
 import { resolve } from 'path'
-import { printDirectoryTree } from "./misc"
+import { debug } from "console"
 
 const arch_map = {
     "silicon": "aarch64-apple-darwin",
@@ -23,7 +23,7 @@ async function run(): Promise<void> {
 
         const project_path = resolve(process.cwd(), getInput('projectPath') || "./");
 
-        const config_path = project_path + "/src-tauri/tauri.conf.json";
+        const config_path = resolve(project_path, "/src-tauri/tauri.conf.json");
         const json_file = JSON.parse(readFileSync(config_path).toString("utf-8"));
         const tauri = new TauriProject(json_file);
 
@@ -32,7 +32,10 @@ async function run(): Promise<void> {
         const release_name = getInput("release-name");
         const release_body = getInput("release-body");
 
-        console.log(release_body);
+        debug(`architecture ${architecture}`);
+        debug(`release_tag ${release_tag}`);
+        debug(`release_name ${release_name}`);
+        debug(`release_body ${release_body}`);
 
         const local = new LocalProject(release_tag, release_name, release_body, tauri);
 
@@ -57,7 +60,6 @@ async function run(): Promise<void> {
 
         let release = await get_release(local.release_tag);
         if (release === null) release = await create_release(local);
-
 
     } catch (error) {
         let err = error as Error
