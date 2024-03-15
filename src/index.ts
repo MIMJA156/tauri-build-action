@@ -7,6 +7,7 @@ import { create_release } from './create'
 import { readFileSync } from 'fs';
 import { resolve } from 'path'
 import { debug } from "console"
+import { upload_assets } from "./upload"
 
 const arch_map = {
     "silicon": "aarch64-apple-darwin",
@@ -61,6 +62,7 @@ async function run(): Promise<void> {
         let release = await get_release(local.release_tag);
         if (release === null) release = await create_release(local);
 
+        console.log(process.arch);
     } catch (error) {
         let err = error as Error
         setFailed(err.message);
