@@ -24,7 +24,7 @@ async function run(): Promise<void> {
 
         const project_path = resolve(process.cwd(), getInput('projectPath') || "./");
 
-        const config_path = resolve(project_path, "/src-tauri/tauri.conf.json");
+        const config_path = project_path + "/src-tauri/tauri.conf.json";
         const json_file = JSON.parse(readFileSync(config_path).toString("utf-8"));
         const tauri = new TauriProject(json_file);
 
