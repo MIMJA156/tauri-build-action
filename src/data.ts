@@ -1,10 +1,11 @@
 export class TauriProject {
     package: {
         version: string
+        productName: ""
     }
 
     constructor(config: any) {
-        this.package = { version: "" }
+        this.package = { version: "", productName: "" }
         this.package.version = config.package.version
     }
 }

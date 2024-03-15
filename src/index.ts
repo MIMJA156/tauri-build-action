@@ -8,6 +8,7 @@ import { readFileSync } from 'fs';
 import { resolve } from 'path'
 import { debug } from "console"
 import { upload_assets } from "./upload"
+import { findCurrentArtifacts } from "./misc"
 
 const arch_map = {
     "silicon": "aarch64-apple-darwin",
@@ -62,7 +63,14 @@ async function run(): Promise<void> {
         let release = await get_release(local.release_tag);
         if (release === null) release = await create_release(local);
 
-        console.log(process.arch);
+        let platform =
+            process.platform === 'win32'
+                ? 'windows'
+                : process.platform === 'darwin'
+                    ? 'macos'
+                    : 'linux';
+        let assets = findCurrentArtifacts(platform, architecture, tauri, project_path);
+        await upload_assets(release!.id, assets)
     } catch (error) {
         let err = error as Error
         setFailed(err.message);

@@ -37,7 +37,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.LocalProject = exports.TauriProject = void 0;
 class TauriProject {
     constructor(config) {
-        this.package = { version: "" };
+        this.package = { version: "", productName: "" };
         this.package.version = config.package.version;
     }
 }
@@ -76,6 +76,125 @@ async function get_release(tag_name) {
     return release;
 }
 exports.get_release = get_release;
+
+
+/***/ }),
+
+/***/ 2460:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.findCurrentArtifacts = exports.printDirectoryTree = void 0;
+const fs = __importStar(__nccwpck_require__(7147));
+const path = __importStar(__nccwpck_require__(1017));
+function printDirectoryTree(dirPath, indent = '', maxDepth = Infinity, currentDepth = 0) {
+    if (currentDepth > maxDepth) {
+        return;
+    }
+    const files = fs.readdirSync(dirPath);
+    files.forEach(file => {
+        const filePath = path.join(dirPath, file);
+        const stats = fs.statSync(filePath);
+        if (stats.isDirectory()) {
+            console.log(indent + '|-- ' + file + ' (Dir)');
+            printDirectoryTree(filePath, indent + '   ', maxDepth, currentDepth + 1);
+        }
+        else {
+            console.log(indent + '|-- ' + file);
+        }
+    });
+}
+exports.printDirectoryTree = printDirectoryTree;
+function findCurrentArtifacts(platform, arch, tauri, project_path) {
+    let assetPaths = [];
+    switch (platform) {
+        case "macos":
+            const macPath = project_path + "/src-tauri/target/release/bundle/macos/";
+            assetPaths.push(macPath + `${tauri.package.productName}.app.tar.gz`);
+            assetPaths.push(macPath + `${tauri.package.productName}.app.tar.gz.sig`);
+            break;
+        case "windows":
+            const winPath = project_path + "\\src-tauri\\target\\release\\bundle\\nsis\\";
+            assetPaths.push(winPath + `${tauri.package.productName}_${tauri.package.version}_${process.arch}-setup.exe`);
+            assetPaths.push(winPath + `${tauri.package.productName}_${tauri.package.version}_${process.arch}-setup.nsis.zip`);
+            assetPaths.push(winPath + `${tauri.package.productName}_${tauri.package.version}_${process.arch}-setup.nsis.zip.sig`);
+            break;
+    }
+    const validAssets = assetPaths.filter(item => fs.existsSync(item));
+    return validAssets.map(item => {
+        return { path: item, arch: process.arch };
+    });
+}
+exports.findCurrentArtifacts = findCurrentArtifacts;
+
+
+/***/ }),
+
+/***/ 4831:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.upload_assets = void 0;
+const github_1 = __nccwpck_require__(5438);
+const fs_1 = __importDefault(__nccwpck_require__(7147));
+async function upload_assets(id, assets) {
+    const github = (0, github_1.getOctokit)(process.env.GITHUB_TOKEN);
+    const already_uploaded = (await github.rest.repos.listReleaseAssets({
+        owner: github_1.context.repo.owner,
+        repo: github_1.context.repo.repo,
+        release_id: id,
+        per_page: 25,
+    })).data;
+    console.log(already_uploaded);
+    for (const asset of assets) {
+        const headers = {
+            'content-type': 'application/zip',
+            'content-length': fs_1.default.statSync(asset.path).size,
+        };
+        const betterPath = asset.path.replace("\\", "/");
+        const splitPath = betterPath.split("/");
+        const assetName = splitPath[splitPath.length - 1];
+        await github.rest.repos.uploadReleaseAsset({
+            headers,
+            name: assetName,
+            data: fs_1.default.readFileSync(asset.path),
+            owner: github_1.context.repo.owner,
+            repo: github_1.context.repo.repo,
+            release_id: id,
+        });
+    }
+}
+exports.upload_assets = upload_assets;
 
 
 /***/ }),
@@ -33956,6 +34075,8 @@ const create_1 = __nccwpck_require__(9018);
 const fs_1 = __nccwpck_require__(7147);
 const path_1 = __nccwpck_require__(1017);
 const console_1 = __nccwpck_require__(6206);
+const upload_1 = __nccwpck_require__(4831);
+const misc_1 = __nccwpck_require__(2460);
 const arch_map = {
     "silicon": "aarch64-apple-darwin",
     "intel": "x86_64-apple-darwin",
@@ -34000,7 +34121,13 @@ async function run() {
         let release = await (0, get_1.get_release)(local.release_tag);
         if (release === null)
             release = await (0, create_1.create_release)(local);
-        console.log(process.arch);
+        let platform = process.platform === 'win32'
+            ? 'windows'
+            : process.platform === 'darwin'
+                ? 'macos'
+                : 'linux';
+        let assets = (0, misc_1.findCurrentArtifacts)(platform, architecture, tauri, project_path);
+        await (0, upload_1.upload_assets)(release.id, assets);
     }
     catch (error) {
         let err = error;
