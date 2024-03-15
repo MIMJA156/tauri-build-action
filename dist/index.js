@@ -134,12 +134,21 @@ function findCurrentArtifacts(platform, arch, tauri, project_path) {
     let assetPaths = [];
     switch (platform) {
         case "macos":
-            const macPath = project_path + "/src-tauri/target/release/bundle/macos/";
-            assetPaths.push(macPath + `${tauri.package.productName}.app.tar.gz`);
-            assetPaths.push(macPath + `${tauri.package.productName}.app.tar.gz.sig`);
+            let macPath;
+            if (arch === "intel") {
+                macPath = project_path + "/src-tauri/target/x86_64-apple-darwin/release/bundle/macos/";
+            }
+            else if (arch === "silicon") {
+                macPath = project_path + "/src-tauri/target/aarch64-apple-darwin/release/bundle/macos/";
+            }
+            if (macPath) {
+                assetPaths.push(macPath + `${tauri.package.productName}.app`);
+                assetPaths.push(macPath + `${tauri.package.productName}.app.tar.gz`);
+                assetPaths.push(macPath + `${tauri.package.productName}.app.tar.gz.sig`);
+            }
             break;
         case "windows":
-            const winPath = project_path + "\\src-tauri\\target\\release\\bundle\\nsis\\";
+            const winPath = project_path + "/src-tauri/target/release/bundle/nsis/";
             assetPaths.push(winPath + `${tauri.package.productName}_${tauri.package.version}_${process.arch}-setup.exe`);
             assetPaths.push(winPath + `${tauri.package.productName}_${tauri.package.version}_${process.arch}-setup.nsis.zip`);
             assetPaths.push(winPath + `${tauri.package.productName}_${tauri.package.version}_${process.arch}-setup.nsis.zip.sig`);
@@ -175,7 +184,7 @@ async function upload_assets(id, assets) {
         release_id: id,
         per_page: 25,
     })).data;
-    console.log(already_uploaded);
+    console.log(assets);
     for (const asset of assets) {
         const headers = {
             'content-type': 'application/zip',
