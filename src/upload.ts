@@ -15,7 +15,7 @@ export async function upload_assets(id: number, assets: Artifact[]) {
         })
     ).data;
 
-    console.log(already_uploaded);
+    console.log(assets);
 
     for (const asset of assets) {
         const headers = {
