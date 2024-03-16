@@ -98,7 +98,7 @@ export async function generateVersionJSON(id: number, projectPath: string, tauri
         const path = `https://github.com/${context.repo.owner}/${context.repo.repo}/release/download/${local.releaseTag}/${assetName}`;
 
         updaterManifest.platforms[buildFile.architecture] = {
-            signature: fs.readFileSync(signatureFile.path),
+            signature: fs.readFileSync(signatureFile.path).toString(),
             path,
         };
     }
