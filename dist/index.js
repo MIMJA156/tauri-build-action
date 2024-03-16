@@ -298,7 +298,7 @@ async function generateVersionJSON(id, projectPath, tauri, local, assets) {
         const betterPath = buildFile.path.replace("\\", "/");
         const splitPath = betterPath.split("/");
         const assetName = splitPath[splitPath.length - 1];
-        const path = `https://github.com/${github_1.context.repo.owner}/${github_1.context.repo.repo}/release/download/${local.releaseTag}/${assetName}`;
+        const path = `https://github.com/${github_1.context.repo.owner}/${github_1.context.repo.repo}/releases/download/${local.releaseTag}/${assetName}`;
         updaterManifest.platforms[buildFile.architecture] = {
             signature: fs_1.default.readFileSync(signatureFile.path).toString(),
             url: path,
