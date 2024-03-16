@@ -41,9 +41,16 @@ class TauriProject {
             version: config.package.version,
             productName: config.package.productName,
         };
-        this.updater = {
-            active: config.updater.active,
-        };
+        if (config.updater) {
+            this.updater = {
+                active: config.updater.active,
+            };
+        }
+        else {
+            this.updater = {
+                active: false,
+            };
+        }
     }
 }
 exports.TauriProject = TauriProject;
