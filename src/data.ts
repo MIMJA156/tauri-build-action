@@ -28,7 +28,7 @@ export interface GithubRelease {
     tag_name: string;
 }
 
-export interface Artifact {
+export interface Asset {
     path: string;
     arch: string;
 }

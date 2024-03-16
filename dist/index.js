@@ -110,9 +110,10 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.findCurrentArtifacts = exports.printDirectoryTree = void 0;
+exports.compressMacAssets = exports.findCurrentAssets = exports.printDirectoryTree = void 0;
 const fs = __importStar(__nccwpck_require__(7147));
 const path = __importStar(__nccwpck_require__(1017));
+const execa_1 = __nccwpck_require__(4460);
 function printDirectoryTree(dirPath, indent = "", maxDepth = Infinity, currentDepth = 0) {
     if (currentDepth > maxDepth) {
         return;
@@ -131,7 +132,7 @@ function printDirectoryTree(dirPath, indent = "", maxDepth = Infinity, currentDe
     });
 }
 exports.printDirectoryTree = printDirectoryTree;
-function findCurrentArtifacts(platform, arch, tauri, project_path) {
+function findCurrentAssets(platform, arch, tauri, project_path) {
     let assetPaths = [];
     switch (platform) {
         case "macos":
@@ -163,7 +164,21 @@ function findCurrentArtifacts(platform, arch, tauri, project_path) {
         return { path: item, arch: process.arch };
     });
 }
-exports.findCurrentArtifacts = findCurrentArtifacts;
+exports.findCurrentAssets = findCurrentAssets;
+// edits assets array by reference
+async function compressMacAssets(assets) {
+    for (let i = 0; i < assets.length; i++) {
+        const asset = assets[i];
+        if (asset.path.endsWith(".app") && !fs.existsSync(asset.path + ".tar.gz")) {
+            await (0, execa_1.execa)("tar", ["czf", `${asset.path}.tar.gz`, "-C", path.dirname(asset.path), path.basename(asset.path)], {
+                stdio: "inherit",
+                env: { FORCE_COLOR: "0" },
+            }).then();
+            assets.push({ arch: asset.arch, path: asset.path + ".tar.gz" });
+        }
+    }
+}
+exports.compressMacAssets = compressMacAssets;
 
 
 /***/ }),
@@ -182,22 +197,33 @@ const github_1 = __nccwpck_require__(5438);
 const fs_1 = __importDefault(__nccwpck_require__(7147));
 async function upload_assets(id, assets) {
     const github = (0, github_1.getOctokit)(process.env.GITHUB_TOKEN);
-    const already_uploaded = (await github.rest.repos.listReleaseAssets({
+    const alreadyUploaded = (await github.rest.repos.listReleaseAssets({
         owner: github_1.context.repo.owner,
         repo: github_1.context.repo.repo,
         release_id: id,
         per_page: 25,
     })).data;
-    console.log(already_uploaded);
+    console.log(alreadyUploaded);
     console.log(assets);
     for (const asset of assets) {
+        const fileStats = fs_1.default.statSync(asset.path);
+        if (fileStats.isDirectory())
+            continue;
         const headers = {
             "content-type": "application/zip",
-            "content-length": fs_1.default.statSync(asset.path).size,
+            "content-length": fileStats.size,
         };
         const betterPath = asset.path.replace("\\", "/");
         const splitPath = betterPath.split("/");
         const assetName = splitPath[splitPath.length - 1];
+        const hasDuplicateName = alreadyUploaded.find((a) => a.name === assetName.trim().replace(/ /g, "."));
+        if (hasDuplicateName) {
+            await github.rest.repos.deleteReleaseAsset({
+                owner: github_1.context.repo.owner,
+                repo: github_1.context.repo.repo,
+                asset_id: hasDuplicateName.id,
+            });
+        }
         await github.rest.repos.uploadReleaseAsset({
             headers,
             name: assetName,
@@ -34136,7 +34162,9 @@ async function run() {
         if (release === null)
             release = await (0, create_1.create_release)(local);
         let platform = process.platform === "win32" ? "windows" : process.platform === "darwin" ? "macos" : "linux";
-        let assets = (0, misc_1.findCurrentArtifacts)(platform, architecture, tauri, project_path);
+        let assets = (0, misc_1.findCurrentAssets)(platform, architecture, tauri, project_path);
+        if (platform === "macos")
+            await (0, misc_1.compressMacAssets)(assets);
         await (0, upload_1.upload_assets)(release.id, assets);
     }
     catch (error) {

@@ -1,6 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
-import { Artifact, TauriProject } from "./data";
+import { Asset, TauriProject } from "./data";
+import { execa } from "execa";
 
 export function printDirectoryTree(dirPath: string, indent: string = "", maxDepth: number = Infinity, currentDepth: number = 0): void {
     if (currentDepth > maxDepth) {
@@ -22,7 +23,7 @@ export function printDirectoryTree(dirPath: string, indent: string = "", maxDept
     });
 }
 
-export function findCurrentArtifacts(platform: string, arch: string, tauri: TauriProject, project_path: string): Artifact[] {
+export function findCurrentAssets(platform: string, arch: string, tauri: TauriProject, project_path: string): Asset[] {
     let assetPaths = [];
 
     switch (platform) {
@@ -58,4 +59,20 @@ export function findCurrentArtifacts(platform: string, arch: string, tauri: Taur
     return validAssets.map((item) => {
         return { path: item, arch: process.arch };
     });
+}
+
+// edits assets array by reference
+export async function compressMacAssets(assets: Asset[]) {
+    for (let i = 0; i < assets.length; i++) {
+        const asset = assets[i];
+
+        if (asset.path.endsWith(".app") && !fs.existsSync(asset.path + ".tar.gz")) {
+            await execa("tar", ["czf", `${asset.path}.tar.gz`, "-C", path.dirname(asset.path), path.basename(asset.path)], {
+                stdio: "inherit",
+                env: { FORCE_COLOR: "0" },
+            }).then();
+
+            assets.push({ arch: asset.arch, path: asset.path + ".tar.gz" });
+        }
+    }
 }
