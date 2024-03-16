@@ -1,25 +1,32 @@
 export class TauriProject {
     package: {
         version: string;
-        productName: "";
+        productName: string;
     };
 
+    updater: { active: boolean };
+
     constructor(config: any) {
-        this.package = { version: "", productName: "" };
-        this.package.version = config.package.version;
-        this.package.productName = config.package.productName;
+        this.package = {
+            version: config.package.version,
+            productName: config.package.productName,
+        };
+
+        this.updater = {
+            active: config.updater.active,
+        };
     }
 }
 
 export class LocalProject {
-    release_tag: string;
-    release_name: string;
-    release_body: string;
+    releaseTag: string;
+    releaseName: string;
+    releaseBody: string;
 
-    constructor(release_tag: string, release_name: string, release_body: string, project: TauriProject) {
-        this.release_tag = release_tag.replace("$VERSION", project.package.version);
-        this.release_name = release_name.replace("$VERSION", project.package.version);
-        this.release_body = release_body.replace("$VERSION", project.package.version);
+    constructor(releaseTag: string, releaseName: string, releaseBody: string, project: TauriProject) {
+        this.releaseTag = releaseTag.replace("$VERSION", project.package.version);
+        this.releaseName = releaseName.replace("$VERSION", project.package.version);
+        this.releaseBody = releaseBody.replace("$VERSION", project.package.version);
     }
 }
 
@@ -30,5 +37,5 @@ export interface GithubRelease {
 
 export interface Asset {
     path: string;
-    arch: string;
+    architecture: string;
 }

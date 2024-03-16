@@ -7,23 +7,23 @@
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.create_release = void 0;
+exports.createRelease = void 0;
 const github_1 = __nccwpck_require__(5438);
-async function create_release(project) {
+async function createRelease(project) {
     const github = (0, github_1.getOctokit)(process.env.GITHUB_TOKEN);
     const createdRelease = await github.rest.repos.createRelease({
         owner: github_1.context.repo.owner,
         repo: github_1.context.repo.repo,
-        tag_name: project.release_tag,
-        name: project.release_name,
-        body: project.release_body,
+        tag_name: project.releaseTag,
+        name: project.releaseName,
+        body: project.releaseBody,
         draft: true,
         prerelease: false,
         target_commitish: github_1.context.sha,
     });
     return createdRelease.data;
 }
-exports.create_release = create_release;
+exports.createRelease = createRelease;
 
 
 /***/ }),
@@ -37,17 +37,21 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.LocalProject = exports.TauriProject = void 0;
 class TauriProject {
     constructor(config) {
-        this.package = { version: "", productName: "" };
-        this.package.version = config.package.version;
-        this.package.productName = config.package.productName;
+        this.package = {
+            version: config.package.version,
+            productName: config.package.productName,
+        };
+        this.updater = {
+            active: config.updater.active,
+        };
     }
 }
 exports.TauriProject = TauriProject;
 class LocalProject {
-    constructor(release_tag, release_name, release_body, project) {
-        this.release_tag = release_tag.replace("$VERSION", project.package.version);
-        this.release_name = release_name.replace("$VERSION", project.package.version);
-        this.release_body = release_body.replace("$VERSION", project.package.version);
+    constructor(releaseTag, releaseName, releaseBody, project) {
+        this.releaseTag = releaseTag.replace("$VERSION", project.package.version);
+        this.releaseName = releaseName.replace("$VERSION", project.package.version);
+        this.releaseBody = releaseBody.replace("$VERSION", project.package.version);
     }
 }
 exports.LocalProject = LocalProject;
@@ -61,22 +65,22 @@ exports.LocalProject = LocalProject;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.get_release = void 0;
+exports.getRelease = void 0;
 const github_1 = __nccwpck_require__(5438);
-async function get_release(tag_name) {
+async function getRelease(tagName) {
     const github = (0, github_1.getOctokit)(process.env.GITHUB_TOKEN);
     let release = null;
-    const params = { per_page: 100, owner: github_1.context.repo.owner, repo: github_1.context.repo.repo };
+    const params = { per_page: 50, owner: github_1.context.repo.owner, repo: github_1.context.repo.repo };
     const iterator = github.paginate.iterator(github.rest.repos.listReleases.endpoint.merge(params));
     for await (const response of iterator) {
-        const possible_release = response.data.find((release) => release.tag_name === tag_name);
-        if (possible_release) {
-            release = possible_release;
+        const possibleRelease = response.data.find((release) => release.tag_name === tagName);
+        if (possibleRelease) {
+            release = possibleRelease;
         }
     }
     return release;
 }
-exports.get_release = get_release;
+exports.getRelease = getRelease;
 
 
 /***/ }),
@@ -134,19 +138,28 @@ function printDirectoryTree(dirPath, indent = "", maxDepth = Infinity, currentDe
 exports.printDirectoryTree = printDirectoryTree;
 function findCurrentAssets(platform, arch, tauri, project_path) {
     let assetPaths = [];
+    let altArch;
     switch (platform) {
         case "macos":
-            let macPath;
             if (arch === "intel") {
-                macPath = project_path + "/src-tauri/target/x86_64-apple-darwin/release/bundle/macos/";
+                let macPath = project_path + "/src-tauri/target/x86_64-apple-darwin/release/bundle/macos/";
+                fs.renameSync(macPath + `${tauri.package.productName}.app`, macPath + `${tauri.package.productName}_x86_64.app`);
+                fs.renameSync(macPath + `${tauri.package.productName}.app.tar.gz`, macPath + `${tauri.package.productName}_x86_64.app.tar.gz`);
+                fs.renameSync(macPath + `${tauri.package.productName}.app.tar.gz.sig`, macPath + `${tauri.package.productName}_x86_64.app.tar.gz.sig`);
+                assetPaths.push(macPath + `${tauri.package.productName}_x86_64.app`);
+                assetPaths.push(macPath + `${tauri.package.productName}_x86_64.app.tar.gz`);
+                assetPaths.push(macPath + `${tauri.package.productName}_x86_64.app.tar.gz.sig`);
+                altArch = "darwin-x86_64";
             }
             else if (arch === "silicon") {
-                macPath = project_path + "/src-tauri/target/aarch64-apple-darwin/release/bundle/macos/";
-            }
-            if (macPath) {
-                assetPaths.push(macPath + `${tauri.package.productName}.app`);
-                assetPaths.push(macPath + `${tauri.package.productName}.app.tar.gz`);
-                assetPaths.push(macPath + `${tauri.package.productName}.app.tar.gz.sig`);
+                let macPath = project_path + "/src-tauri/target/aarch64-apple-darwin/release/bundle/macos/";
+                fs.renameSync(macPath + `${tauri.package.productName}.app`, macPath + `${tauri.package.productName}_aarch64.app`);
+                fs.renameSync(macPath + `${tauri.package.productName}.app.tar.gz`, macPath + `${tauri.package.productName}_aarch64.app.tar.gz`);
+                fs.renameSync(macPath + `${tauri.package.productName}.app.tar.gz.sig`, macPath + `${tauri.package.productName}_aarch64.app.tar.gz.sig`);
+                assetPaths.push(macPath + `${tauri.package.productName}_aarch64.app`);
+                assetPaths.push(macPath + `${tauri.package.productName}_aarch64.app.tar.gz`);
+                assetPaths.push(macPath + `${tauri.package.productName}_aarch64.app.tar.gz.sig`);
+                altArch = "darwin-aarch64";
             }
             break;
         case "windows":
@@ -154,6 +167,7 @@ function findCurrentAssets(platform, arch, tauri, project_path) {
             assetPaths.push(winPath + `${tauri.package.productName}_${tauri.package.version}_${process.arch}-setup.exe`);
             assetPaths.push(winPath + `${tauri.package.productName}_${tauri.package.version}_${process.arch}-setup.nsis.zip`);
             assetPaths.push(winPath + `${tauri.package.productName}_${tauri.package.version}_${process.arch}-setup.nsis.zip.sig`);
+            altArch = "windows-x86_64";
             break;
     }
     console.log(assetPaths);
@@ -161,7 +175,7 @@ function findCurrentAssets(platform, arch, tauri, project_path) {
     console.log(process.platform);
     const validAssets = assetPaths.filter((item) => fs.existsSync(item));
     return validAssets.map((item) => {
-        return { path: item, arch: process.arch };
+        return { path: item, architecture: altArch };
     });
 }
 exports.findCurrentAssets = findCurrentAssets;
@@ -174,7 +188,7 @@ async function compressMacAssets(assets) {
                 stdio: "inherit",
                 env: { FORCE_COLOR: "0" },
             }).then();
-            assets.push({ arch: asset.arch, path: asset.path + ".tar.gz" });
+            assets.push({ path: asset.path + ".tar.gz", architecture: asset.architecture });
         }
     }
 }
@@ -192,16 +206,16 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.upload_assets = void 0;
+exports.generateVersionJSON = exports.uploadAssets = void 0;
 const github_1 = __nccwpck_require__(5438);
 const fs_1 = __importDefault(__nccwpck_require__(7147));
-async function upload_assets(id, assets) {
+async function uploadAssets(id, assets) {
     const github = (0, github_1.getOctokit)(process.env.GITHUB_TOKEN);
     const alreadyUploaded = (await github.rest.repos.listReleaseAssets({
         owner: github_1.context.repo.owner,
         repo: github_1.context.repo.repo,
         release_id: id,
-        per_page: 25,
+        per_page: 50,
     })).data;
     console.log(alreadyUploaded);
     console.log(assets);
@@ -234,7 +248,51 @@ async function upload_assets(id, assets) {
         });
     }
 }
-exports.upload_assets = upload_assets;
+exports.uploadAssets = uploadAssets;
+async function generateVersionJSON(id, projectPath, tauri, local, assets) {
+    const updaterJSONName = "updater.json";
+    const updaterJSONFilePath = projectPath + "/" + updaterJSONName;
+    const github = (0, github_1.getOctokit)(process.env.GITHUB_TOKEN);
+    let updaterManifest = {
+        version: tauri.package.version,
+        notes: local.releaseBody,
+        pub_date: new Date().toISOString(),
+        platforms: {},
+    };
+    const alreadyUploaded = (await github.rest.repos.listReleaseAssets({
+        owner: github_1.context.repo.owner,
+        repo: github_1.context.repo.repo,
+        release_id: id,
+        per_page: 50,
+    })).data;
+    const preExistingUpdaterJSONAsset = alreadyUploaded.find((e) => e.name === updaterJSONName);
+    if (preExistingUpdaterJSONAsset) {
+        const preExistingUpdaterJSONAssetData = (await github.request("GET /repos/{owner}/{repo}/releases/assets/{asset_id}", {
+            owner: github_1.context.repo.owner,
+            repo: github_1.context.repo.repo,
+            asset_id: preExistingUpdaterJSONAsset.id,
+            headers: {
+                accept: "application/octet-stream",
+            },
+        })).data;
+        updaterManifest.platforms = JSON.parse(Buffer.from(preExistingUpdaterJSONAssetData).toString()).platforms;
+    }
+    const signatureFile = assets.find((a) => a.path.endsWith(".sig"));
+    const buildFile = assets.find((a) => a.path.endsWith(".tar.gz"));
+    if (buildFile && signatureFile) {
+        const betterPath = buildFile.path.replace("\\", "/");
+        const splitPath = betterPath.split("/");
+        const assetName = splitPath[splitPath.length - 1];
+        const path = `https://github.com/${github_1.context.repo.owner}/${github_1.context.repo.repo}/release/download/${local.releaseTag}/${assetName}`;
+        updaterManifest.platforms[buildFile.architecture] = {
+            signature: fs_1.default.readFileSync(signatureFile.path),
+            path,
+        };
+    }
+    fs_1.default.writeFileSync(updaterJSONFilePath, JSON.stringify(updaterManifest, null, 2));
+    return updaterJSONFilePath;
+}
+exports.generateVersionJSON = generateVersionJSON;
 
 
 /***/ }),
@@ -34114,58 +34172,57 @@ const data_1 = __nccwpck_require__(7383);
 const create_1 = __nccwpck_require__(9018);
 const fs_1 = __nccwpck_require__(7147);
 const path_1 = __nccwpck_require__(1017);
-const console_1 = __nccwpck_require__(6206);
 const upload_1 = __nccwpck_require__(4831);
 const misc_1 = __nccwpck_require__(2460);
-const arch_map = {
+const archMap = {
     silicon: "aarch64-apple-darwin",
     intel: "x86_64-apple-darwin",
     universal: "universal-apple-darwin",
 };
-const base_command = "npm";
-const base_args = ["run", "tauri", "build"];
+const baseCommand = "npm";
+const baseArgs = ["run", "tauri", "build"];
 async function run() {
     try {
         if (process.env.GITHUB_TOKEN === undefined)
             throw new Error("GITHUB_TOKEN env var is required");
-        const project_path = (0, path_1.resolve)(process.cwd(), (0, core_1.getInput)("projectPath") || "./");
-        const config_path = project_path + "/src-tauri/tauri.conf.json";
-        const json_file = JSON.parse((0, fs_1.readFileSync)(config_path).toString("utf-8"));
-        const tauri = new data_1.TauriProject(json_file);
+        const projectPath = (0, path_1.resolve)(process.cwd(), (0, core_1.getInput)("projectPath") || "./");
+        const configPath = projectPath + "/src-tauri/tauri.conf.json";
+        const jsonFile = JSON.parse((0, fs_1.readFileSync)(configPath).toString("utf-8"));
+        const tauri = new data_1.TauriProject(jsonFile);
         const architecture = (0, core_1.getInput)("arch").toLowerCase();
-        const release_tag = (0, core_1.getInput)("release-tag");
-        const release_name = (0, core_1.getInput)("release-name");
-        const release_body = (0, core_1.getInput)("release-body");
-        (0, console_1.debug)(`architecture ${architecture}`);
-        (0, console_1.debug)(`release_tag ${release_tag}`);
-        (0, console_1.debug)(`release_name ${release_name}`);
-        (0, console_1.debug)(`release_body ${release_body}`);
-        const local = new data_1.LocalProject(release_tag, release_name, release_body, tauri);
+        const releaseTag = (0, core_1.getInput)("release-tag");
+        const releaseName = (0, core_1.getInput)("release-name");
+        const releaseBody = (0, core_1.getInput)("release-body");
+        const local = new data_1.LocalProject(releaseTag, releaseName, releaseBody, tauri);
         if (architecture !== "none") {
-            const current_args = [...base_args];
+            const current_args = [...baseArgs];
             current_args.push("--");
             current_args.push("--target");
-            current_args.push(arch_map[architecture]);
-            await (0, execa_1.execa)(base_command, current_args, {
+            current_args.push(archMap[architecture]);
+            await (0, execa_1.execa)(baseCommand, current_args, {
                 stdio: "inherit",
                 env: { FORCE_COLOR: "0" },
             }).then();
         }
         else {
-            const current_args = [...base_args];
-            await (0, execa_1.execa)(base_command, current_args, {
+            const current_args = [...baseArgs];
+            await (0, execa_1.execa)(baseCommand, current_args, {
                 stdio: "inherit",
                 env: { FORCE_COLOR: "0" },
             }).then();
         }
-        let release = await (0, get_1.get_release)(local.release_tag);
+        let release = await (0, get_1.getRelease)(local.releaseTag);
         if (release === null)
-            release = await (0, create_1.create_release)(local);
+            release = await (0, create_1.createRelease)(local);
         let platform = process.platform === "win32" ? "windows" : process.platform === "darwin" ? "macos" : "linux";
-        let assets = (0, misc_1.findCurrentAssets)(platform, architecture, tauri, project_path);
+        let assets = (0, misc_1.findCurrentAssets)(platform, architecture, tauri, projectPath);
         if (platform === "macos")
             await (0, misc_1.compressMacAssets)(assets);
-        await (0, upload_1.upload_assets)(release.id, assets);
+        if (tauri.updater.active) {
+            const manifestPath = await (0, upload_1.generateVersionJSON)(release.id, projectPath, tauri, local, assets);
+            assets.push({ path: manifestPath, architecture: "NONE/MANIFEST" });
+        }
+        await (0, upload_1.uploadAssets)(release.id, assets);
     }
     catch (error) {
         let err = error;

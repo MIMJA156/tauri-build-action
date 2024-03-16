@@ -1,73 +1,73 @@
 import { getInput, setFailed, setOutput, info } from "@actions/core";
-import { get_release } from "./get";
+import { getRelease } from "./get";
 import { execa } from "execa";
 
 import { LocalProject, TauriProject } from "./data";
-import { create_release } from "./create";
+import { createRelease } from "./create";
 import { readFileSync } from "fs";
 import { resolve } from "path";
 import { debug } from "console";
-import { upload_assets } from "./upload";
+import { generateVersionJSON, uploadAssets } from "./upload";
 import { compressMacAssets, findCurrentAssets } from "./misc";
 
-const arch_map = {
+const archMap = {
     silicon: "aarch64-apple-darwin",
     intel: "x86_64-apple-darwin",
     universal: "universal-apple-darwin",
 };
 
-const base_command = "npm";
-const base_args = ["run", "tauri", "build"];
+const baseCommand = "npm";
+const baseArgs = ["run", "tauri", "build"];
 
 async function run(): Promise<void> {
     try {
         if (process.env.GITHUB_TOKEN === undefined) throw new Error("GITHUB_TOKEN env var is required");
 
-        const project_path = resolve(process.cwd(), getInput("projectPath") || "./");
+        const projectPath = resolve(process.cwd(), getInput("projectPath") || "./");
 
-        const config_path = project_path + "/src-tauri/tauri.conf.json";
-        const json_file = JSON.parse(readFileSync(config_path).toString("utf-8"));
-        const tauri = new TauriProject(json_file);
+        const configPath = projectPath + "/src-tauri/tauri.conf.json";
+        const jsonFile = JSON.parse(readFileSync(configPath).toString("utf-8"));
+        const tauri = new TauriProject(jsonFile);
 
         const architecture = getInput("arch").toLowerCase() as "intel" | "silicon" | "none";
-        const release_tag = getInput("release-tag");
-        const release_name = getInput("release-name");
-        const release_body = getInput("release-body");
+        const releaseTag = getInput("release-tag");
+        const releaseName = getInput("release-name");
+        const releaseBody = getInput("release-body");
 
-        debug(`architecture ${architecture}`);
-        debug(`release_tag ${release_tag}`);
-        debug(`release_name ${release_name}`);
-        debug(`release_body ${release_body}`);
-
-        const local = new LocalProject(release_tag, release_name, release_body, tauri);
+        const local = new LocalProject(releaseTag, releaseName, releaseBody, tauri);
 
         if (architecture !== "none") {
-            const current_args = [...base_args];
+            const current_args = [...baseArgs];
 
             current_args.push("--");
             current_args.push("--target");
-            current_args.push(arch_map[architecture]);
+            current_args.push(archMap[architecture]);
 
-            await execa(base_command, current_args, {
+            await execa(baseCommand, current_args, {
                 stdio: "inherit",
                 env: { FORCE_COLOR: "0" },
             }).then();
         } else {
-            const current_args = [...base_args];
-            await execa(base_command, current_args, {
+            const current_args = [...baseArgs];
+            await execa(baseCommand, current_args, {
                 stdio: "inherit",
                 env: { FORCE_COLOR: "0" },
             }).then();
         }
 
-        let release = await get_release(local.release_tag);
-        if (release === null) release = await create_release(local);
+        let release = await getRelease(local.releaseTag);
+        if (release === null) release = await createRelease(local);
 
         let platform = process.platform === "win32" ? "windows" : process.platform === "darwin" ? "macos" : "linux";
-        let assets = findCurrentAssets(platform, architecture, tauri, project_path);
+        let assets = findCurrentAssets(platform, architecture, tauri, projectPath);
         if (platform === "macos") await compressMacAssets(assets);
 
-        await upload_assets(release!.id, assets);
+        if (tauri.updater.active) {
+            const manifestPath = await generateVersionJSON(release!.id, projectPath, tauri, local, assets);
+            assets.push({ path: manifestPath, architecture: "NONE/MANIFEST" });
+        }
+
+        await uploadAssets(release!.id, assets);
     } catch (error) {
         let err = error as Error;
         setFailed(err.message);

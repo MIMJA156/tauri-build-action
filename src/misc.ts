@@ -25,21 +25,34 @@ export function printDirectoryTree(dirPath: string, indent: string = "", maxDept
 
 export function findCurrentAssets(platform: string, arch: string, tauri: TauriProject, project_path: string): Asset[] {
     let assetPaths = [];
+    let altArch: string;
 
     switch (platform) {
         case "macos":
-            let macPath;
-
             if (arch === "intel") {
-                macPath = project_path + "/src-tauri/target/x86_64-apple-darwin/release/bundle/macos/";
-            } else if (arch === "silicon") {
-                macPath = project_path + "/src-tauri/target/aarch64-apple-darwin/release/bundle/macos/";
-            }
+                let macPath = project_path + "/src-tauri/target/x86_64-apple-darwin/release/bundle/macos/";
 
-            if (macPath) {
-                assetPaths.push(macPath + `${tauri.package.productName}.app`);
-                assetPaths.push(macPath + `${tauri.package.productName}.app.tar.gz`);
-                assetPaths.push(macPath + `${tauri.package.productName}.app.tar.gz.sig`);
+                fs.renameSync(macPath + `${tauri.package.productName}.app`, macPath + `${tauri.package.productName}_x86_64.app`);
+                fs.renameSync(macPath + `${tauri.package.productName}.app.tar.gz`, macPath + `${tauri.package.productName}_x86_64.app.tar.gz`);
+                fs.renameSync(macPath + `${tauri.package.productName}.app.tar.gz.sig`, macPath + `${tauri.package.productName}_x86_64.app.tar.gz.sig`);
+
+                assetPaths.push(macPath + `${tauri.package.productName}_x86_64.app`);
+                assetPaths.push(macPath + `${tauri.package.productName}_x86_64.app.tar.gz`);
+                assetPaths.push(macPath + `${tauri.package.productName}_x86_64.app.tar.gz.sig`);
+
+                altArch = "darwin-x86_64";
+            } else if (arch === "silicon") {
+                let macPath = project_path + "/src-tauri/target/aarch64-apple-darwin/release/bundle/macos/";
+
+                fs.renameSync(macPath + `${tauri.package.productName}.app`, macPath + `${tauri.package.productName}_aarch64.app`);
+                fs.renameSync(macPath + `${tauri.package.productName}.app.tar.gz`, macPath + `${tauri.package.productName}_aarch64.app.tar.gz`);
+                fs.renameSync(macPath + `${tauri.package.productName}.app.tar.gz.sig`, macPath + `${tauri.package.productName}_aarch64.app.tar.gz.sig`);
+
+                assetPaths.push(macPath + `${tauri.package.productName}_aarch64.app`);
+                assetPaths.push(macPath + `${tauri.package.productName}_aarch64.app.tar.gz`);
+                assetPaths.push(macPath + `${tauri.package.productName}_aarch64.app.tar.gz.sig`);
+
+                altArch = "darwin-aarch64";
             }
             break;
 
@@ -48,6 +61,8 @@ export function findCurrentAssets(platform: string, arch: string, tauri: TauriPr
             assetPaths.push(winPath + `${tauri.package.productName}_${tauri.package.version}_${process.arch}-setup.exe`);
             assetPaths.push(winPath + `${tauri.package.productName}_${tauri.package.version}_${process.arch}-setup.nsis.zip`);
             assetPaths.push(winPath + `${tauri.package.productName}_${tauri.package.version}_${process.arch}-setup.nsis.zip.sig`);
+
+            altArch = "windows-x86_64";
             break;
     }
 
@@ -57,7 +72,7 @@ export function findCurrentAssets(platform: string, arch: string, tauri: TauriPr
 
     const validAssets = assetPaths.filter((item) => fs.existsSync(item));
     return validAssets.map((item) => {
-        return { path: item, arch: process.arch };
+        return { path: item, architecture: altArch };
     });
 }
 
@@ -72,7 +87,7 @@ export async function compressMacAssets(assets: Asset[]) {
                 env: { FORCE_COLOR: "0" },
             }).then();
 
-            assets.push({ arch: asset.arch, path: asset.path + ".tar.gz" });
+            assets.push({ path: asset.path + ".tar.gz", architecture: asset.architecture });
         }
     }
 }
