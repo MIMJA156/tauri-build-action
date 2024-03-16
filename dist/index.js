@@ -190,9 +190,6 @@ function findCurrentAssets(platform, arch, tauri, project_path) {
             altArch = "windows-x86_64";
             break;
     }
-    console.log(assetPaths);
-    console.log(platform);
-    console.log(process.platform);
     const validAssets = assetPaths.filter((item) => fs.existsSync(item));
     return validAssets.map((item) => {
         return { path: item, architecture: altArch };
@@ -237,8 +234,6 @@ async function uploadAssets(id, assets) {
         release_id: id,
         per_page: 50,
     })).data;
-    console.log(alreadyUploaded);
-    console.log(assets);
     for (const asset of assets) {
         const fileStats = fs_1.default.statSync(asset.path);
         if (fileStats.isDirectory())
@@ -306,7 +301,7 @@ async function generateVersionJSON(id, projectPath, tauri, local, assets) {
         const path = `https://github.com/${github_1.context.repo.owner}/${github_1.context.repo.repo}/release/download/${local.releaseTag}/${assetName}`;
         updaterManifest.platforms[buildFile.architecture] = {
             signature: fs_1.default.readFileSync(signatureFile.path).toString(),
-            path,
+            url: path,
         };
     }
     fs_1.default.writeFileSync(updaterJSONFilePath, JSON.stringify(updaterManifest, null, 2));
