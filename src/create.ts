@@ -12,8 +12,8 @@ export async function create_release(project: LocalProject): Promise<GithubRelea
         body: project.release_body,
         draft: true,
         prerelease: false,
-        target_commitish: context.sha
+        target_commitish: context.sha,
     });
 
-    return createdRelease.data
+    return createdRelease.data;
 }

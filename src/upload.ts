@@ -1,7 +1,7 @@
-import { getOctokit, context } from '@actions/github';
-import { Artifact } from './data';
-import fs from 'fs';
-import path from 'path';
+import { getOctokit, context } from "@actions/github";
+import { Artifact } from "./data";
+import fs from "fs";
+import path from "path";
 
 export async function upload_assets(id: number, assets: Artifact[]) {
     const github = getOctokit(process.env.GITHUB_TOKEN!);
@@ -15,12 +15,13 @@ export async function upload_assets(id: number, assets: Artifact[]) {
         })
     ).data;
 
+    console.log(already_uploaded);
     console.log(assets);
 
     for (const asset of assets) {
         const headers = {
-            'content-type': 'application/zip',
-            'content-length': fs.statSync(asset.path).size,
+            "content-type": "application/zip",
+            "content-length": fs.statSync(asset.path).size,
         };
 
         const betterPath = asset.path.replace("\\", "/");

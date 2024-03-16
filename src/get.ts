@@ -17,5 +17,5 @@ export async function get_release(tag_name: string): Promise<GithubRelease | nul
         }
     }
 
-    return release
+    return release;
 }

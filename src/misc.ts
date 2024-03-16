@@ -1,23 +1,23 @@
-import * as fs from 'fs';
-import * as path from 'path';
-import { Artifact, TauriProject } from './data';
+import * as fs from "fs";
+import * as path from "path";
+import { Artifact, TauriProject } from "./data";
 
-export function printDirectoryTree(dirPath: string, indent: string = '', maxDepth: number = Infinity, currentDepth: number = 0): void {
+export function printDirectoryTree(dirPath: string, indent: string = "", maxDepth: number = Infinity, currentDepth: number = 0): void {
     if (currentDepth > maxDepth) {
         return;
     }
 
     const files: string[] = fs.readdirSync(dirPath);
 
-    files.forEach(file => {
+    files.forEach((file) => {
         const filePath: string = path.join(dirPath, file);
         const stats: fs.Stats = fs.statSync(filePath);
 
         if (stats.isDirectory()) {
-            console.log(indent + '|-- ' + file + ' (Dir)');
-            printDirectoryTree(filePath, indent + '   ', maxDepth, currentDepth + 1);
+            console.log(indent + "|-- " + file + " (Dir)");
+            printDirectoryTree(filePath, indent + "   ", maxDepth, currentDepth + 1);
         } else {
-            console.log(indent + '|-- ' + file);
+            console.log(indent + "|-- " + file);
         }
     });
 }
@@ -28,7 +28,6 @@ export function findCurrentArtifacts(platform: string, arch: string, tauri: Taur
     switch (platform) {
         case "macos":
             let macPath;
-
 
             if (arch === "intel") {
                 macPath = project_path + "/src-tauri/target/x86_64-apple-darwin/release/bundle/macos/";
@@ -51,8 +50,12 @@ export function findCurrentArtifacts(platform: string, arch: string, tauri: Taur
             break;
     }
 
-    const validAssets = assetPaths.filter(item => fs.existsSync(item))
-    return validAssets.map(item => {
-        return { path: item, arch: process.arch }
+    console.log(assetPaths);
+    console.log(platform);
+    console.log(process.platform);
+
+    const validAssets = assetPaths.filter((item) => fs.existsSync(item));
+    return validAssets.map((item) => {
+        return { path: item, arch: process.arch };
     });
 }

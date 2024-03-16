@@ -19,7 +19,7 @@ async function create_release(project) {
         body: project.release_body,
         draft: true,
         prerelease: false,
-        target_commitish: github_1.context.sha
+        target_commitish: github_1.context.sha,
     });
     return createdRelease.data;
 }
@@ -112,20 +112,20 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.findCurrentArtifacts = exports.printDirectoryTree = void 0;
 const fs = __importStar(__nccwpck_require__(7147));
 const path = __importStar(__nccwpck_require__(1017));
-function printDirectoryTree(dirPath, indent = '', maxDepth = Infinity, currentDepth = 0) {
+function printDirectoryTree(dirPath, indent = "", maxDepth = Infinity, currentDepth = 0) {
     if (currentDepth > maxDepth) {
         return;
     }
     const files = fs.readdirSync(dirPath);
-    files.forEach(file => {
+    files.forEach((file) => {
         const filePath = path.join(dirPath, file);
         const stats = fs.statSync(filePath);
         if (stats.isDirectory()) {
-            console.log(indent + '|-- ' + file + ' (Dir)');
-            printDirectoryTree(filePath, indent + '   ', maxDepth, currentDepth + 1);
+            console.log(indent + "|-- " + file + " (Dir)");
+            printDirectoryTree(filePath, indent + "   ", maxDepth, currentDepth + 1);
         }
         else {
-            console.log(indent + '|-- ' + file);
+            console.log(indent + "|-- " + file);
         }
     });
 }
@@ -154,8 +154,11 @@ function findCurrentArtifacts(platform, arch, tauri, project_path) {
             assetPaths.push(winPath + `${tauri.package.productName}_${tauri.package.version}_${process.arch}-setup.nsis.zip.sig`);
             break;
     }
-    const validAssets = assetPaths.filter(item => fs.existsSync(item));
-    return validAssets.map(item => {
+    console.log(assetPaths);
+    console.log(platform);
+    console.log(process.platform);
+    const validAssets = assetPaths.filter((item) => fs.existsSync(item));
+    return validAssets.map((item) => {
         return { path: item, arch: process.arch };
     });
 }
@@ -184,11 +187,12 @@ async function upload_assets(id, assets) {
         release_id: id,
         per_page: 25,
     })).data;
+    console.log(already_uploaded);
     console.log(assets);
     for (const asset of assets) {
         const headers = {
-            'content-type': 'application/zip',
-            'content-length': fs_1.default.statSync(asset.path).size,
+            "content-type": "application/zip",
+            "content-length": fs_1.default.statSync(asset.path).size,
         };
         const betterPath = asset.path.replace("\\", "/");
         const splitPath = betterPath.split("/");
@@ -34087,17 +34091,17 @@ const console_1 = __nccwpck_require__(6206);
 const upload_1 = __nccwpck_require__(4831);
 const misc_1 = __nccwpck_require__(2460);
 const arch_map = {
-    "silicon": "aarch64-apple-darwin",
-    "intel": "x86_64-apple-darwin",
-    "universal": "universal-apple-darwin"
+    silicon: "aarch64-apple-darwin",
+    intel: "x86_64-apple-darwin",
+    universal: "universal-apple-darwin",
 };
 const base_command = "npm";
 const base_args = ["run", "tauri", "build"];
 async function run() {
     try {
         if (process.env.GITHUB_TOKEN === undefined)
-            throw new Error('GITHUB_TOKEN env var is required');
-        const project_path = (0, path_1.resolve)(process.cwd(), (0, core_1.getInput)('projectPath') || "./");
+            throw new Error("GITHUB_TOKEN env var is required");
+        const project_path = (0, path_1.resolve)(process.cwd(), (0, core_1.getInput)("projectPath") || "./");
         const config_path = project_path + "/src-tauri/tauri.conf.json";
         const json_file = JSON.parse((0, fs_1.readFileSync)(config_path).toString("utf-8"));
         const tauri = new data_1.TauriProject(json_file);
@@ -34116,25 +34120,21 @@ async function run() {
             current_args.push("--target");
             current_args.push(arch_map[architecture]);
             await (0, execa_1.execa)(base_command, current_args, {
-                stdio: 'inherit',
-                env: { FORCE_COLOR: '0' },
+                stdio: "inherit",
+                env: { FORCE_COLOR: "0" },
             }).then();
         }
         else {
             const current_args = [...base_args];
             await (0, execa_1.execa)(base_command, current_args, {
-                stdio: 'inherit',
-                env: { FORCE_COLOR: '0' },
+                stdio: "inherit",
+                env: { FORCE_COLOR: "0" },
             }).then();
         }
         let release = await (0, get_1.get_release)(local.release_tag);
         if (release === null)
             release = await (0, create_1.create_release)(local);
-        let platform = process.platform === 'win32'
-            ? 'windows'
-            : process.platform === 'darwin'
-                ? 'macos'
-                : 'linux';
+        let platform = process.platform === "win32" ? "windows" : process.platform === "darwin" ? "macos" : "linux";
         let assets = (0, misc_1.findCurrentArtifacts)(platform, architecture, tauri, project_path);
         await (0, upload_1.upload_assets)(release.id, assets);
     }
