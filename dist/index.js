@@ -37,13 +37,14 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.LocalProject = exports.TauriProject = void 0;
 class TauriProject {
     constructor(config) {
+        var _a;
         this.package = {
             version: config.package.version,
             productName: config.package.productName,
         };
-        if (config.updater) {
+        if (config.tauri.updater) {
             this.updater = {
-                active: config.updater.active,
+                active: (_a = config.tauri.updater.active) !== null && _a !== void 0 ? _a : false,
             };
         }
         else {
@@ -150,22 +151,34 @@ function findCurrentAssets(platform, arch, tauri, project_path) {
         case "macos":
             if (arch === "intel") {
                 let macPath = project_path + "/src-tauri/target/x86_64-apple-darwin/release/bundle/macos/";
-                fs.renameSync(macPath + `${tauri.package.productName}.app`, macPath + `${tauri.package.productName}_x86_64.app`);
-                fs.renameSync(macPath + `${tauri.package.productName}.app.tar.gz`, macPath + `${tauri.package.productName}_x86_64.app.tar.gz`);
-                fs.renameSync(macPath + `${tauri.package.productName}.app.tar.gz.sig`, macPath + `${tauri.package.productName}_x86_64.app.tar.gz.sig`);
-                assetPaths.push(macPath + `${tauri.package.productName}_x86_64.app`);
-                assetPaths.push(macPath + `${tauri.package.productName}_x86_64.app.tar.gz`);
-                assetPaths.push(macPath + `${tauri.package.productName}_x86_64.app.tar.gz.sig`);
+                if (fs.existsSync(macPath + `${tauri.package.productName}.app`)) {
+                    fs.renameSync(macPath + `${tauri.package.productName}.app`, macPath + `${tauri.package.productName}_x86_64.app`);
+                    assetPaths.push(macPath + `${tauri.package.productName}_x86_64.app`);
+                }
+                if (fs.existsSync(macPath + `${tauri.package.productName}.app.tar.gz`)) {
+                    fs.renameSync(macPath + `${tauri.package.productName}.app.tar.gz`, macPath + `${tauri.package.productName}_x86_64.app.tar.gz`);
+                    assetPaths.push(macPath + `${tauri.package.productName}_x86_64.app.tar.gz`);
+                }
+                if (fs.existsSync(macPath + `${tauri.package.productName}.app.tar.gz.sig`)) {
+                    fs.renameSync(macPath + `${tauri.package.productName}.app.tar.gz.sig`, macPath + `${tauri.package.productName}_x86_64.app.tar.gz.sig`);
+                    assetPaths.push(macPath + `${tauri.package.productName}_x86_64.app.tar.gz.sig`);
+                }
                 altArch = "darwin-x86_64";
             }
             else if (arch === "silicon") {
                 let macPath = project_path + "/src-tauri/target/aarch64-apple-darwin/release/bundle/macos/";
-                fs.renameSync(macPath + `${tauri.package.productName}.app`, macPath + `${tauri.package.productName}_aarch64.app`);
-                fs.renameSync(macPath + `${tauri.package.productName}.app.tar.gz`, macPath + `${tauri.package.productName}_aarch64.app.tar.gz`);
-                fs.renameSync(macPath + `${tauri.package.productName}.app.tar.gz.sig`, macPath + `${tauri.package.productName}_aarch64.app.tar.gz.sig`);
-                assetPaths.push(macPath + `${tauri.package.productName}_aarch64.app`);
-                assetPaths.push(macPath + `${tauri.package.productName}_aarch64.app.tar.gz`);
-                assetPaths.push(macPath + `${tauri.package.productName}_aarch64.app.tar.gz.sig`);
+                if (fs.existsSync(macPath + `${tauri.package.productName}.app`)) {
+                    fs.renameSync(macPath + `${tauri.package.productName}.app`, macPath + `${tauri.package.productName}_aarch64.app`);
+                    assetPaths.push(macPath + `${tauri.package.productName}_aarch64.app`);
+                }
+                if (fs.existsSync(macPath + `${tauri.package.productName}.app.tar.gz`)) {
+                    fs.renameSync(macPath + `${tauri.package.productName}.app.tar.gz`, macPath + `${tauri.package.productName}_aarch64.app.tar.gz`);
+                    assetPaths.push(macPath + `${tauri.package.productName}_aarch64.app.tar.gz`);
+                }
+                if (fs.existsSync(macPath + `${tauri.package.productName}.app.tar.gz.sig`)) {
+                    fs.renameSync(macPath + `${tauri.package.productName}.app.tar.gz.sig`, macPath + `${tauri.package.productName}_aarch64.app.tar.gz.sig`);
+                    assetPaths.push(macPath + `${tauri.package.productName}_aarch64.app.tar.gz.sig`);
+                }
                 altArch = "darwin-aarch64";
             }
             break;

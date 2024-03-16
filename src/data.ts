@@ -12,9 +12,9 @@ export class TauriProject {
             productName: config.package.productName,
         };
 
-        if (config.updater) {
+        if (config.tauri.updater) {
             this.updater = {
-                active: config.updater.active,
+                active: config.tauri.updater.active ?? false,
             };
         } else {
             this.updater = {
