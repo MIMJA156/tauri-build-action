@@ -298,7 +298,7 @@ async function generateVersionJSON(id, projectPath, tauri, local, assets) {
         updaterManifest.platforms = JSON.parse(Buffer.from(preExistingUpdaterJSONAssetData).toString()).platforms;
     }
     const signatureFile = assets.find((a) => a.path.endsWith(".sig"));
-    const buildFile = assets.find((a) => a.path.endsWith(".tar.gz"));
+    const buildFile = assets.find((a) => a.path.endsWith(".tar.gz") || a.path.endsWith(".zip"));
     if (buildFile && signatureFile) {
         const betterPath = buildFile.path.replace("\\", "/");
         const splitPath = betterPath.split("/");
