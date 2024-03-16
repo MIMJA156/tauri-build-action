@@ -6,7 +6,6 @@ import { LocalProject, TauriProject } from "./data";
 import { createRelease } from "./create";
 import { readFileSync } from "fs";
 import { resolve } from "path";
-import { debug } from "console";
 import { generateVersionJSON, uploadAssets } from "./upload";
 import { compressMacAssets, findCurrentAssets } from "./misc";
 

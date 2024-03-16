@@ -14,9 +14,6 @@ export async function uploadAssets(id: number, assets: Asset[]) {
         })
     ).data;
 
-    console.log(alreadyUploaded);
-    console.log(assets);
-
     for (const asset of assets) {
         const fileStats = fs.statSync(asset.path);
         if (fileStats.isDirectory()) continue;
@@ -99,7 +96,7 @@ export async function generateVersionJSON(id: number, projectPath: string, tauri
 
         updaterManifest.platforms[buildFile.architecture] = {
             signature: fs.readFileSync(signatureFile.path).toString(),
-            path,
+            url: path,
         };
     }
 

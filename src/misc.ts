@@ -80,10 +80,6 @@ export function findCurrentAssets(platform: string, arch: string, tauri: TauriPr
             break;
     }
 
-    console.log(assetPaths);
-    console.log(platform);
-    console.log(process.platform);
-
     const validAssets = assetPaths.filter((item) => fs.existsSync(item));
     return validAssets.map((item) => {
         return { path: item, architecture: altArch };
