@@ -37,14 +37,13 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.LocalProject = exports.TauriProject = void 0;
 class TauriProject {
     constructor(config) {
-        var _a;
         this.package = {
-            version: config.package.version,
-            productName: config.package.productName,
+            version: config.version,
+            productName: config.productName,
         };
-        if (config.tauri.updater) {
+        if (config.plugins.updater) {
             this.updater = {
-                active: (_a = config.tauri.updater.active) !== null && _a !== void 0 ? _a : false,
+                active: true,
             };
         }
         else {
