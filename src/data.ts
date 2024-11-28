@@ -8,13 +8,13 @@ export class TauriProject {
 
     constructor(config: any) {
         this.package = {
-            version: config.package.version,
-            productName: config.package.productName,
+            version: config.version,
+            productName: config.productName,
         };
 
-        if (config.tauri.updater) {
+        if (config.plugins.updater) {
             this.updater = {
-                active: config.tauri.updater.active ?? false,
+                active: true,
             };
         } else {
             this.updater = {

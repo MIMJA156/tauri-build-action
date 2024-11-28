@@ -1,7 +1,6 @@
 name: "tauri-build-action"
-description: "does cool stuff :3"
+description: "does cool stuff"
 
-# TODO: add better descriptions
 inputs:
   arch:
     description: "the arch"
