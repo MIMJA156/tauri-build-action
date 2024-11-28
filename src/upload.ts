@@ -86,7 +86,7 @@ export async function generateVersionJSON(id: number, projectPath: string, tauri
     }
 
     const signatureFile = assets.find((a) => a.path.endsWith(".sig"));
-    const buildFile = assets.find((a) => a.path.endsWith(".tar.gz") || a.path.endsWith(".zip"));
+    const buildFile = assets.find((a) => a.path.endsWith(".tar.gz") || a.path.endsWith(".zip") || a.path.endsWith(".exe"));
 
     if (buildFile && signatureFile) {
         const betterPath = buildFile.path.replace("\\", "/");

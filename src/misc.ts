@@ -73,8 +73,7 @@ export function findCurrentAssets(platform: string, arch: string, tauri: TauriPr
         case "windows":
             const winPath = project_path + "/src-tauri/target/release/bundle/nsis/";
             assetPaths.push(winPath + `${tauri.package.productName}_${tauri.package.version}_${process.arch}-setup.exe`);
-            assetPaths.push(winPath + `${tauri.package.productName}_${tauri.package.version}_${process.arch}-setup.nsis.zip`);
-            assetPaths.push(winPath + `${tauri.package.productName}_${tauri.package.version}_${process.arch}-setup.nsis.zip.sig`);
+            assetPaths.push(winPath + `${tauri.package.productName}_${tauri.package.version}_${process.arch}-setup.exe.sig`);
 
             altArch = "windows-x86_64";
             break;

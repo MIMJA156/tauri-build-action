@@ -184,8 +184,7 @@ function findCurrentAssets(platform, arch, tauri, project_path) {
         case "windows":
             const winPath = project_path + "/src-tauri/target/release/bundle/nsis/";
             assetPaths.push(winPath + `${tauri.package.productName}_${tauri.package.version}_${process.arch}-setup.exe`);
-            assetPaths.push(winPath + `${tauri.package.productName}_${tauri.package.version}_${process.arch}-setup.nsis.zip`);
-            assetPaths.push(winPath + `${tauri.package.productName}_${tauri.package.version}_${process.arch}-setup.nsis.zip.sig`);
+            assetPaths.push(winPath + `${tauri.package.productName}_${tauri.package.version}_${process.arch}-setup.exe.sig`);
             altArch = "windows-x86_64";
             break;
     }
@@ -292,7 +291,7 @@ async function generateVersionJSON(id, projectPath, tauri, local, assets) {
         updaterManifest.platforms = JSON.parse(Buffer.from(preExistingUpdaterJSONAssetData).toString()).platforms;
     }
     const signatureFile = assets.find((a) => a.path.endsWith(".sig"));
-    const buildFile = assets.find((a) => a.path.endsWith(".tar.gz") || a.path.endsWith(".zip"));
+    const buildFile = assets.find((a) => a.path.endsWith(".tar.gz") || a.path.endsWith(".zip") || a.path.endsWith(".exe"));
     if (buildFile && signatureFile) {
         const betterPath = buildFile.path.replace("\\", "/");
         const splitPath = betterPath.split("/");
