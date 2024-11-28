@@ -34213,6 +34213,12 @@ async function run() {
             current_args.push("--");
             current_args.push("--target");
             current_args.push(archMap[architecture]);
+            if (architecture === "intel") {
+                await (0, execa_1.execa)("rustup", ["target", "add", "x86_64-apple-darwin"], {
+                    stdio: "inherit",
+                    env: { FORCE_COLOR: "0" },
+                }).then();
+            }
             await (0, execa_1.execa)(baseCommand, current_args, {
                 stdio: "inherit",
                 env: { FORCE_COLOR: "0" },
