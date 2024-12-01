@@ -7,7 +7,7 @@ import { createRelease } from "./create";
 import { readFileSync } from "fs";
 import { resolve } from "path";
 import { generateVersionJSON, uploadAssets } from "./upload";
-import { compressMacAssets, findCurrentAssets } from "./misc";
+import { findCurrentAssets } from "./misc";
 
 const archMap = {
     silicon: "aarch64-apple-darwin",
@@ -70,7 +70,6 @@ async function run(): Promise<void> {
 
         let platform = process.platform === "win32" ? "windows" : process.platform === "darwin" ? "macos" : "linux";
         let assets = findCurrentAssets(platform, architecture, tauri, projectPath);
-        if (platform === "macos") await compressMacAssets(assets);
 
         if (tauri.updater.active) {
             const manifestPath = await generateVersionJSON(release!.id, projectPath, tauri, local, assets);
