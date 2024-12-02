@@ -41692,6 +41692,12 @@ async function run() {
                     env: { FORCE_COLOR: "0" },
                 }).then();
             }
+            else if (architecture === "silicon") {
+                await (0, execa_1.execa)("rustup", ["target", "add", "aarch64-apple-darwin"], {
+                    stdio: "inherit",
+                    env: { FORCE_COLOR: "0" },
+                }).then();
+            }
             await (0, execa_1.execa)(baseCommand, current_args, {
                 stdio: "inherit",
                 env: { FORCE_COLOR: "0" },
