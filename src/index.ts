@@ -51,6 +51,15 @@ async function run(): Promise<void> {
                         env: { FORCE_COLOR: "0" },
                     },
                 ).then();
+            } else if(architecture === "silicon") {
+                await execa(
+                    "rustup",
+                    ["target", "add", "aarch64-apple-darwin"],
+                    {
+                        stdio: "inherit",
+                        env: { FORCE_COLOR: "0" },
+                    },
+                ).then();
             }
 
             await execa(baseCommand, current_args, {
