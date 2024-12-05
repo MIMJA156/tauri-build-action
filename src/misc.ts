@@ -1,6 +1,12 @@
 import * as fs from "fs";
 import { Asset, TauriProject } from "./data";
 
+export function delay(ms: number) {
+    return new Promise(res => {
+        setTimeout(res, ms);
+    })
+}
+
 export function findCurrentAssets(platform: string, arch: string, tauri: TauriProject, project_path: string): Asset[] {
     let assetPaths = [];
     let altArch: string;

@@ -119,8 +119,14 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.delay = delay;
 exports.findCurrentAssets = findCurrentAssets;
 const fs = __importStar(__nccwpck_require__(9896));
+function delay(ms) {
+    return new Promise(res => {
+        setTimeout(res, ms);
+    });
+}
 function findCurrentAssets(platform, arch, tauri, project_path) {
     let assetPaths = [];
     let altArch;
@@ -41710,6 +41716,7 @@ async function run() {
                 env: { FORCE_COLOR: "0" },
             }).then();
         }
+        await (0, misc_1.delay)(Math.random() * 10 * 1000);
         let release = await (0, get_1.getRelease)(local.releaseTag);
         if (release === null)
             release = await (0, create_1.createRelease)(local);

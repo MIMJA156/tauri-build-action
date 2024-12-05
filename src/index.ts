@@ -7,7 +7,7 @@ import { createRelease } from "./create";
 import { readFileSync } from "fs";
 import { resolve } from "path";
 import { generateVersionJSON, uploadAssets } from "./upload";
-import { findCurrentAssets } from "./misc";
+import { delay, findCurrentAssets } from "./misc";
 
 const archMap = {
     silicon: "aarch64-apple-darwin",
@@ -73,6 +73,8 @@ async function run(): Promise<void> {
                 env: { FORCE_COLOR: "0" },
             }).then();
         }
+
+        await delay(Math.random() * 10 * 1000);
 
         let release = await getRelease(local.releaseTag);
         if (release === null) release = await createRelease(local);
