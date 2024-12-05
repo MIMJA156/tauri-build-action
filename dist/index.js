@@ -41718,8 +41718,13 @@ async function run() {
         }
         await (0, misc_1.delay)(Math.random() * 10 * 1000);
         let release = await (0, get_1.getRelease)(local.releaseTag);
-        if (release === null)
-            release = await (0, create_1.createRelease)(local);
+        try {
+            if (release === null)
+                release = await (0, create_1.createRelease)(local);
+        }
+        catch (e) {
+            release = await (0, get_1.getRelease)(local.releaseTag);
+        }
         let platform = process.platform === "win32" ? "windows" : process.platform === "darwin" ? "macos" : "linux";
         let assets = (0, misc_1.findCurrentAssets)(platform, architecture, tauri, projectPath);
         if (tauri.updater.active) {
