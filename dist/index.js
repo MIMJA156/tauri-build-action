@@ -41716,13 +41716,13 @@ async function run() {
                 env: { FORCE_COLOR: "0" },
             }).then();
         }
-        await (0, misc_1.delay)(Math.random() * 10 * 1000);
         let release = await (0, get_1.getRelease)(local.releaseTag);
         try {
             if (release === null)
                 release = await (0, create_1.createRelease)(local);
         }
         catch (e) {
+            await (0, misc_1.delay)(1000);
             release = await (0, get_1.getRelease)(local.releaseTag);
         }
         let platform = process.platform === "win32" ? "windows" : process.platform === "darwin" ? "macos" : "linux";

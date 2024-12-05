@@ -74,13 +74,11 @@ async function run(): Promise<void> {
             }).then();
         }
 
-        await delay(Math.random() * 10 * 1000);
-
         let release = await getRelease(local.releaseTag);
-        
         try {
             if (release === null) release = await createRelease(local);
         } catch(e) {
+            await delay(1000);
             release = await getRelease(local.releaseTag);
         }
 
